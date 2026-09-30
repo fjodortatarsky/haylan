@@ -2,70 +2,80 @@
 CRM Хай-Лань — Прототип воронки лидов
 Запуск: python app.py
 """
+import os
 from flask import Flask, render_template, request
-from data.demo import LEADS, STAGES, STATUSES, SOURCES
+from models import db, Lead, Stage, Status, Source, Manager
 
 app = Flask(__name__)
+
+# Конфигурация БД
+basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = 'dev-secret-key-change-me'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'haylan.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 
 @app.route('/')
 def funnel():
     """Воронка лидов — основной экран"""
-    
+    # Все этапы (отсортированные)
+    stages = Stage.query.order_by(Stage.order_num).all()
+    stages_list = [s.to_dict() for s in stages]
+
     # Подсчёт лидов на каждом этапе
-    stage_counts = {s['id']: 0 for s in STAGES}
-    for lead in LEADS:
-        if lead['stage_id'] in stage_counts:
-            stage_counts[lead['stage_id']] += 1
-    
-    # Фильтрация по этапу (через ?stage=N)
+    stage_counts = {s['id']: 0 for s in stages_list}
+    all_leads = Lead.query.all()
+    for lead in all_leads:
+        if lead.stage_id in stage_counts:
+            stage_counts[lead.stage_id] += 1
+
+    # Фильтрация по этапу
     filter_stage = request.args.get('stage', type=int)
-    filtered_leads = LEADS
     if filter_stage:
-        filtered_leads = [l for l in LEADS if l['stage_id'] == filter_stage]
-    
-    # Обогащение лидов названиями этапов/статусов
-    stages_map = {s['id']: s for s in STAGES}
-    statuses_map = {s['id']: s for s in STATUSES}
-    
-    for lead in filtered_leads:
-        lead['stage'] = stages_map.get(lead['stage_id'], {})
-        lead['status'] = statuses_map.get(lead['status_id'], {})
-        # Расчёт комиссии
-        if lead.get('fact_sum') and lead.get('commission_rate'):
-            lead['commission'] = round(lead['fact_sum'] * lead['commission_rate'] / 100)
-        else:
-            lead['commission'] = 0
-    
+        leads = Lead.query.filter_by(stage_id=filter_stage).all()
+    else:
+        leads = all_leads
+
+    # Сериализация для шаблона
+    leads_data = [l.to_dict() for l in leads]
+
     return render_template(
         'funnel.html',
-        leads=filtered_leads,
-        stages=STAGES,
+        leads=leads_data,
+        stages=stages_list,
         stage_counts=stage_counts,
         filter_stage=filter_stage,
-        total_leads=len(LEADS),
-        filtered_count=len(filtered_leads),
+        total_leads=len(all_leads),
+        filtered_count=len(leads_data),
     )
 
 
 @app.route('/leads/<int:lead_id>')
 def lead_detail(lead_id):
-    """Детали лида (заглушка)"""
-    lead = next((l for l in LEADS if l['id'] == lead_id), None)
-    if not lead:
-        return 'Лид не найден', 404
-    
-    stages_map = {s['id']: s for s in STAGES}
-    statuses_map = {s['id']: s for s in STATUSES}
-    lead['stage'] = stages_map.get(lead['stage_id'], {})
-    lead['status'] = statuses_map.get(lead['status_id'], {})
-    
-    return render_template('funnel.html', leads=[lead], stages=STAGES,
-                           stage_counts={}, filter_stage=None,
-                           total_leads=1, filtered_count=1)
+    """Детали лида"""
+    lead = Lead.query.get_or_404(lead_id)
+    stages = Stage.query.order_by(Stage.order_num).all()
+    stages_list = [s.to_dict() for s in stages]
+
+    return render_template(
+        'funnel.html',
+        leads=[lead.to_dict()],
+        stages=stages_list,
+        stage_counts={},
+        filter_stage=None,
+        total_leads=1,
+        filtered_count=1,
+    )
+
+
+# Создаём таблицы при первом запуске (на случай если seed не прогоняли)
+with app.app_context():
+    db.create_all()
 
 
 if __name__ == '__main__':
-    print("🚀 CRM Хай-Лань запущена: http://127.0.0.1:5000")
-    app.run(debug=True, port=5000)
+    print("🚀 CRM Хай-Лань запущена: http://127.0.0.1:5001")
+    app.run(debug=True, host="0.0.0.0", port=5001)
+
