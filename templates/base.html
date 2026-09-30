@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CRM Хай-Лань{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>CRM Хай-Лань</h1>
+    <p>Стоматология · Хайхэ</p>
+    <p class="cn">海兰牙科 · 黑河</p>
+  </div>
+  <nav>
+    <a href="/" class="active">
+      <span class="icon">📊</span>
+      <span>Воронка лидов<span class="cn-label">潜在客户漏斗</span></span>
+    </a>
+    <a href="#" class="disabled">
+      <span class="icon">📋</span>
+      <span>Этапы воронки<span class="cn-label">漏斗阶段</span></span>
+    </a>
+    <a href="#" class="disabled">
+      <span class="icon">⏰</span>
+      <span>Контроль сроков<span class="cn-label">期限跟踪</span></span>
+    </a>
+    <a href="#" class="disabled">
+      <span class="icon">💰</span>
+      <span>Финансы и комиссия<span class="cn-label">财务佣金</span></span>
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+{% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

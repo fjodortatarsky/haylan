@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Воронка лидов — CRM Хай-Лань{% endblock %}
+
+{% block content %}
+<h2>Воронка лидов</h2>
+<p class="h2-cn">潜在客户漏斗 — Основная CRM-таблица</p>
+
+<!-- ВИЗУАЛЬНАЯ ВОРОНКА -->
+<div class="card">
+  <div class="card-title">Воронка визуально / 漏斗可视化</div>
+  <div class="card-title-cn">Клик по этапу — фильтрация таблицы</div>
+  <div class="funnel-visual">
+    {% for stage in stages %}
+      {% set count = stage_counts.get(stage.id, 0) %}
+      {% set max_count = stage_counts.values()|max if stage_counts else 1 %}
+      {% set width = (count / max_count * 100) if max_count > 0 else 5 %}
+      <a href="{{ url_for('funnel', stage=stage.id) }}" class="funnel-bar" 
+         style="background:{{ stage.color }}; width:{{ width|round|int }}%; min-width: 120px;">
+        <span>{{ loop.index }}. {{ stage.name }} <span class="cn-name">/ {{ stage.name_cn }}</span></span>
+        <span class="funnel-count">{{ count }} шт.</span>
+      </a>
+    {% endfor %}
+  </div>
+  {% if filter_stage %}
+    <p style="margin-top:12px; font-size:13px;">
+      Фильтр: <strong>{{ stages|selectattr('id', 'equalto', filter_stage)|map(attribute='name')|first }}</strong>
+      &nbsp;|&nbsp; <a href="{{ url_for('funnel') }}">Сбросить</a>
+    </p>
+  {% endif %}
+</div>
+
+<!-- ТАБЛИЦА ЛИДОВ -->
+<div class="card">
+  <div class="card-title">Таблица лидов / 客户表</div>
+  <div class="card-title-cn">Показано {{ filtered_count }} из {{ total_leads }}</div>
+  <div class="scroll-x">
+    <table class="crm-table">
+      <thead>
+        <tr>
+          <th>ID<br><span class="cn">编号</span></th>
+          <th>Дата<br><span class="cn">日期</span></th>
+          <th>Клиент<br><span class="cn">客户</span></th>
+          <th>Телефон<br><span class="cn">电话</span></th>
+          <th>Город<br><span class="cn">城市</span></th>
+          <th>Источник<br><span class="cn">来源</span></th>
+          <th>Запрос<br><span class="cn">需求</span></th>
+          <th>Предв. сумма ₽<br><span class="cn">预估金额</span></th>
+          <th>Факт. сумма ₽<br><span class="cn">实际金额</span></th>
+          <th>Комиссия ₽<br><span class="cn">佣金</span></th>
+          <th>Этап<br><span class="cn">阶段</span></th>
+          <th>Статус<br><span class="cn">状态</span></th>
+          <th>Менеджер<br><span class="cn">经理</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in leads %}
+        <tr>
+          <td>{{ lead.id }}</td>
+          <td>{{ lead.date }}</td>
+          <td><strong>{{ lead.name }}</strong></td>
+          <td>{{ lead.phone }}</td>
+          <td>{{ lead.city }}</td>
+          <td>{{ lead.source }}</td>
+          <td>{{ lead.query }}</td>
+          <td>{{ '{:,.0f}'.format(lead.pre_sum)|replace(',', ' ') if lead.pre_sum else '—' }}</td>
+          <td>{{ '{:,.0f}'.format(lead.fact_sum)|replace(',', ' ') if lead.fact_sum else '—' }}</td>
+          <td class="commission-cell">{{ '{:,.0f}'.format(lead.commission)|replace(',', ' ') if lead.commission else '—' }}</td>
+          <td><span class="badge {{ lead.stage.badge }}">{{ lead.stage.name }}</span></td>
+          <td><span class="badge {{ lead.status.cls }}">{{ lead.status.name }}</span></td>
+          <td>{{ lead.manager }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="13" style="text-align:center; padding:24px; color:#64748b;">
+          Нет лидов. Добавьте первого!
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
