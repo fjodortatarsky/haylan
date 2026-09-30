@@ -2,12 +2,11 @@
 CRM Хай-Лань — Модели данных (SQLAlchemy)
 """
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date
+from datetime import datetime
 
 db = SQLAlchemy()
 
 
-# ===== МЕНЕДЖЕРЫ =====
 class Manager(db.Model):
     __tablename__ = 'managers'
     id = db.Column(db.Integer, primary_key=True)
@@ -21,7 +20,6 @@ class Manager(db.Model):
         return {'id': self.id, 'name': self.name, 'name_cn': self.name_cn}
 
 
-# ===== ЭТАПЫ ВОРОНКИ =====
 class Stage(db.Model):
     __tablename__ = 'stages'
     id = db.Column(db.Integer, primary_key=True)
@@ -41,7 +39,6 @@ class Stage(db.Model):
         }
 
 
-# ===== СТАТУСЫ =====
 class Status(db.Model):
     __tablename__ = 'statuses'
     id = db.Column(db.Integer, primary_key=True)
@@ -53,7 +50,6 @@ class Status(db.Model):
         return {'id': self.id, 'name': self.name, 'name_cn': self.name_cn, 'cls': self.css_class}
 
 
-# ===== ИСТОЧНИКИ =====
 class Source(db.Model):
     __tablename__ = 'sources'
     id = db.Column(db.Integer, primary_key=True)
@@ -66,7 +62,6 @@ class Source(db.Model):
         return {'id': self.id, 'name': self.name, 'name_cn': self.name_cn}
 
 
-# ===== ЛИДЫ =====
 class Lead(db.Model):
     __tablename__ = 'leads'
     id = db.Column(db.Integer, primary_key=True)
@@ -75,7 +70,7 @@ class Lead(db.Model):
     phone = db.Column(db.String(50))
     city = db.Column(db.String(100))
     source_id = db.Column(db.Integer, db.ForeignKey('sources.id'))
-    query = db.Column(db.String(500))
+    client_query = db.Column(db.String(500))  # ← ПЕРЕИМЕНОВАНО!
     pre_sum = db.Column(db.Float, default=0)
     fact_sum = db.Column(db.Float, default=0)
     commission_rate = db.Column(db.Float, default=10)
@@ -93,13 +88,11 @@ class Lead(db.Model):
 
     @property
     def commission(self):
-        """Автоматический расчёт комиссии"""
         if self.fact_sum and self.commission_rate:
             return round(self.fact_sum * self.commission_rate / 100)
         return 0
 
     def to_dict(self):
-        """Сериализация для шаблона (совместимо со старым форматом)"""
         return {
             'id': self.id,
             'date': self.created_date.isoformat() if self.created_date else '',
@@ -107,7 +100,7 @@ class Lead(db.Model):
             'phone': self.phone,
             'city': self.city,
             'source': self.source.name if self.source else '',
-            'query': self.query,
+            'query': self.client_query,  # ← Возвращаем как 'query' для шаблона
             'pre_sum': self.pre_sum or 0,
             'fact_sum': self.fact_sum or 0,
             'commission_rate': self.commission_rate or 0,
@@ -124,25 +117,24 @@ class Lead(db.Model):
         }
 
 
-# ===== ПОЛЬЗОВАТЕЛИ (задел на будущее) =====
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True)
     password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(20), default='viewer')  # admin/manager/viewer
+    role = db.Column(db.String(20), default='viewer')
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-# ===== АУДИТ (задел на будущее) =====
 class AuditLog(db.Model):
     __tablename__ = 'audit_log'
     id = db.Column(db.Integer, primary_key=True)
     lead_id = db.Column(db.Integer, db.ForeignKey('leads.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    action = db.Column(db.String(20))  # create/update/delete
+    action = db.Column(db.String(20))
     old_values = db.Column(db.JSON)
     new_values = db.Column(db.JSON)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
