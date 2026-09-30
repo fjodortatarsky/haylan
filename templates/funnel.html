@@ -34,6 +34,11 @@
 <div class="card">
   <div class="card-title">Таблица лидов / 客户表</div>
   <div class="card-title-cn">Показано {{ filtered_count }} из {{ total_leads }}</div>
+  
+  <div style="margin-bottom: 16px;">
+    <a href="{{ url_for('lead_create') }}" class="btn btn-primary">+ Добавить лид</a>
+  </div>
+  
   <div class="scroll-x">
     <table class="crm-table">
       <thead>
@@ -51,6 +56,7 @@
           <th>Этап<br><span class="cn">阶段</span></th>
           <th>Статус<br><span class="cn">状态</span></th>
           <th>Менеджер<br><span class="cn">经理</span></th>
+          <th>Действия</th>
         </tr>
       </thead>
       <tbody>
@@ -58,7 +64,7 @@
         <tr>
           <td>{{ lead.id }}</td>
           <td>{{ lead.date }}</td>
-          <td><strong>{{ lead.name }}</strong></td>
+          <td><strong><a href="{{ url_for('lead_detail', lead_id=lead.id) }}" style="color: inherit; text-decoration: none;">{{ lead.name }}</a></strong></td>
           <td>{{ lead.phone }}</td>
           <td>{{ lead.city }}</td>
           <td>{{ lead.source }}</td>
@@ -69,14 +75,59 @@
           <td><span class="badge {{ lead.stage.badge }}">{{ lead.stage.name }}</span></td>
           <td><span class="badge {{ lead.status.cls }}">{{ lead.status.name }}</span></td>
           <td>{{ lead.manager }}</td>
+          <td>
+            <div style="display: flex; gap: 8px;">
+              <a href="{{ url_for('lead_edit', lead_id=lead.id) }}" class="btn-small btn-edit" title="Редактировать">✏️</a>
+              <form method="POST" action="{{ url_for('lead_delete', lead_id=lead.id) }}" 
+                    onsubmit="return confirm('Удалить лид {{ lead.name }}?');" style="margin: 0;">
+                <button type="submit" class="btn-small btn-delete" title="Удалить">🗑️</button>
+              </form>
+            </div>
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="13" style="text-align:center; padding:24px; color:#64748b;">
-          Нет лидов. Добавьте первого!
+        <tr><td colspan="14" style="text-align:center; padding:24px; color:#64748b;">
+          Нет лидов. <a href="{{ url_for('lead_create') }}">Добавьте первого!</a>
         </td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<style>
+.btn-small {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+}
+.btn-edit:hover {
+  background: #e0f2fe;
+}
+.btn-delete:hover {
+  background: #fee2e2;
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+.btn-primary:hover {
+  background: #2563eb;
+}
+</style>
+
 {% endblock %}

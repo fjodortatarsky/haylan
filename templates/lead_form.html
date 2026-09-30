@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — CRM Хай-Лань{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+<p class="h2-cn">客户信息 — {{ '新客户' if 'Новый' in title else '编辑客户' }}</p>
+
+<div class="card">
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="form-grid">
+      <!-- Основные данные -->
+      <div class="form-section">
+        <h3>Основные данные</h3>
+        
+        <div class="form-group">
+          {{ form.name.label }}
+          {{ form.name(class="form-control") }}
+          {% for error in form.name.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.phone.label }}
+            {{ form.phone(class="form-control", placeholder="+7 900 123-45-67") }}
+            {% for error in form.phone.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.city.label }}
+            {{ form.city(class="form-control") }}
+            {% for error in form.city.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.source_id.label }}
+            {{ form.source_id(class="form-control") }}
+            {% for error in form.source_id.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.manager_id.label }}
+            {{ form.manager_id(class="form-control") }}
+            {% for error in form.manager_id.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          {{ form.client_query.label }}
+          {{ form.client_query(class="form-control", rows=2, placeholder="Что интересует клиента?") }}
+          {% for error in form.client_query.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- Финансы -->
+      <div class="form-section">
+        <h3>Финансы</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.pre_sum.label }}
+            {{ form.pre_sum(class="form-control", type="number", step="0.01") }}
+            {% for error in form.pre_sum.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.fact_sum.label }}
+            {{ form.fact_sum(class="form-control", type="number", step="0.01") }}
+            {% for error in form.fact_sum.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.commission_rate.label }}
+            {{ form.commission_rate(class="form-control", type="number", step="0.1", min="0", max="100") }}
+            {% for error in form.commission_rate.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Воронка -->
+      <div class="form-section">
+        <h3>Воронка</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.stage_id.label }}
+            {{ form.stage_id(class="form-control") }}
+            {% for error in form.stage_id.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.status_id.label }}
+            {{ form.status_id(class="form-control") }}
+            {% for error in form.status_id.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.last_contact_date.label }}
+            {{ form.last_contact_date(class="form-control", type="date") }}
+            {% for error in form.last_contact_date.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+          
+          <div class="form-group">
+            {{ form.plan_contact_date.label }}
+            {{ form.plan_contact_date(class="form-control", type="date") }}
+            {% for error in form.plan_contact_date.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Дополнительно -->
+      <div class="form-section">
+        <h3>Дополнительно</h3>
+        
+        <div class="form-group">
+          {{ form.comment.label }}
+          {{ form.comment(class="form-control", rows=3) }}
+          {% for error in form.comment.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <div class="form-group">
+          {{ form.loss_reason.label }}
+          {{ form.loss_reason(class="form-control", rows=2, placeholder="Заполняется только для потерянных лидов") }}
+          {% for error in form.loss_reason.errors %}
+            <span class="form-error">{{ error }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('funnel') }}" class="btn btn-secondary">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.form-section {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.form-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  color: #475569;
+}
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.form-error {
+  display: block;
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+.btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+.btn-primary:hover {
+  background: #2563eb;
+}
+.btn-secondary {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+</style>
+{% endblock %}

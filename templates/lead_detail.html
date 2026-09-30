@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lead.name }} — CRM Хай-Лань{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+  <div>
+    <h2 style="margin: 0;">{{ lead.name }}</h2>
+    <p class="h2-cn" style="margin: 4px 0 0 0;">客户详情</p>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    <a href="{{ url_for('lead_edit', lead_id=lead.id) }}" class="btn btn-primary">Редактировать</a>
+    <form method="POST" action="{{ url_for('lead_delete', lead_id=lead.id) }}" 
+          onsubmit="return confirm('Удалить лид {{ lead.name }}?');">
+      <button type="submit" class="btn btn-danger">Удалить</button>
+    </form>
+    <a href="{{ url_for('funnel') }}" class="btn btn-secondary">← Назад</a>
+  </div>
+</div>
+
+<!-- ВИЗУАЛЬНАЯ ВОРОНКА (мини) -->
+{% if stages %}
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-title">Воронка визуально / 漏斗可视化</div>
+  <div class="funnel-visual">
+    {% for stage in stages %}
+      {% set max_count = stages|map(attribute='count')|max %}
+      {% set width = (stage.count / max_count * 100) if max_count > 0 else 5 %}
+      {% set is_current = stage.id == lead.stage_id %}
+      <a href="{{ url_for('funnel', stage=stage.id) }}" 
+         class="funnel-bar {% if is_current %}funnel-bar-active{% endif %}"
+         style="background:{{ stage.color }}; width:{{ width|round|int }}%; min-width: 120px;">
+        <span>{{ loop.index }}. {{ stage.name }} <span class="cn-name">/ {{ stage.name_cn }}</span></span>
+        <span class="funnel-count">{{ stage.count }} шт.</span>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- КАРТОЧКА ЛИДА -->
+<div class="card">
+  <div class="lead-detail-grid">
+    
+    <div class="detail-section">
+      <h3>Контакты</h3>
+      <table class="detail-table">
+        <tr><td>Имя</td><td><strong>{{ lead.name }}</strong></td></tr>
+        <tr><td>Телефон</td><td>{{ lead.phone or '—' }}</td></tr>
+        <tr><td>Город</td><td>{{ lead.city or '—' }}</td></tr>
+        <tr><td>Источник</td><td>{{ lead.source or '—' }}</td></tr>
+      </table>
+    </div>
+    
+    <div class="detail-section">
+      <h3>Запрос</h3>
+      <p style="margin: 0; color: #475569;">{{ lead.query or '—' }}</p>
+    </div>
+    
+    <div class="detail-section">
+      <h3>Финансы</h3>
+      <table class="detail-table">
+        <tr>
+          <td>Предв. сумма</td>
+          <td>{{ '{:,.0f}'.format(lead.pre_sum)|replace(',', ' ') if lead.pre_sum else '—' }} ₽</td>
+        </tr>
+        <tr>
+          <td>Факт. сумма</td>
+          <td>{{ '{:,.0f}'.format(lead.fact_sum)|replace(',', ' ') if lead.fact_sum else '—' }} ₽</td>
+        </tr>
+        <tr>
+          <td>Комиссия</td>
+          <td><strong>{{ '{:,.0f}'.format(lead.commission)|replace(',', ' ') if lead.commission else '—' }} ₽</strong></td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="detail-section">
+      <h3>Воронка</h3>
+      <table class="detail-table">
+        <tr>
+          <td>Этап</td>
+          <td><span class="badge {{ lead.stage.badge }}">{{ lead.stage.name }}</span></td>
+        </tr>
+        <tr>
+          <td>Статус</td>
+          <td><span class="badge {{ lead.status.cls }}">{{ lead.status.name }}</span></td>
+        </tr>
+        <tr>
+          <td>Менеджер</td>
+          <td>{{ lead.manager or '—' }}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="detail-section">
+      <h3>Даты контактов</h3>
+      <table class="detail-table">
+        <tr><td>Последний контакт</td><td>{{ lead.last_contact or '—' }}</td></tr>
+        <tr><td>Следующий контакт</td><td>{{ lead.plan_contact or '—' }}</td></tr>
+        <tr><td>Создан</td><td>{{ lead.date }}</td></tr>
+      </table>
+    </div>
+    
+    {% if lead.comment %}
+    <div class="detail-section">
+      <h3>Комментарий</h3>
+      <p style="margin: 0; color: #475569;">{{ lead.comment }}</p>
+    </div>
+    {% endif %}
+    
+    {% if lead.loss_reason %}
+    <div class="detail-section" style="background: #fef2f2; border-color: #fecaca;">
+      <h3 style="color: #dc2626;">Причина потери</h3>
+      <p style="margin: 0; color: #7f1d1d;">{{ lead.loss_reason }}</p>
+    </div>
+    {% endif %}
+    
+  </div>
+</div>
+
+<style>
+.lead-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.detail-section {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.detail-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.detail-table td:first-child {
+  color: #64748b;
+  font-size: 13px;
+  width: 40%;
+}
+.detail-table td:last-child {
+  color: #1e293b;
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+.btn-primary:hover {
+  background: #2563eb;
+}
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+.btn-danger:hover {
+  background: #dc2626;
+}
+.btn-secondary {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+.funnel-bar-active {
+  outline: 3px solid #1e293b;
+  outline-offset: 2px;
+}
+</style>
+{% endblock %}
