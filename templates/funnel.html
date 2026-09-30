@@ -10,15 +10,15 @@
 <div class="card">
   <div class="card-title">Воронка визуально / 漏斗可视化</div>
   <div class="card-title-cn">Клик по этапу — фильтрация таблицы</div>
+
   <div class="funnel-visual">
     {% for stage in stages %}
-      {% set count = stage_counts.get(stage.id, 0) %}
-      {% set max_count = stage_counts.values()|max if stage_counts else 1 %}
-      {% set width = (count / max_count * 100) if max_count > 0 else 5 %}
+      {% set max_count = stages|map(attribute='count')|max %}
+      {% set width = (stage.count / max_count * 100) if max_count > 0 else 5 %}
       <a href="{{ url_for('funnel', stage=stage.id) }}" class="funnel-bar" 
          style="background:{{ stage.color }}; width:{{ width|round|int }}%; min-width: 120px;">
         <span>{{ loop.index }}. {{ stage.name }} <span class="cn-name">/ {{ stage.name_cn }}</span></span>
-        <span class="funnel-count">{{ count }} шт.</span>
+        <span class="funnel-count">{{ stage.count }} шт.</span>
       </a>
     {% endfor %}
   </div>
